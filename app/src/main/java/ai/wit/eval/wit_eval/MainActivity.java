@@ -32,7 +32,7 @@ public class MainActivity extends ActionBarActivity implements IWitListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String accessToken = "37B6Q65ER534PMK5YE6KL2NP7FGXA4C5";
+        String accessToken = "Access token";
         _wit = new Wit(accessToken, this);
         _wit.enableContextLocation(getApplicationContext());
     }
