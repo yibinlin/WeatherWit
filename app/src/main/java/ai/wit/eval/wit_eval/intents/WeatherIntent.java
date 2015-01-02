@@ -1,6 +1,8 @@
 package ai.wit.eval.wit_eval.intents;
 
 import android.content.Context;
+import android.location.Geocoder;
+import android.location.Location;
 import android.util.Log;
 
 import com.google.common.collect.ImmutableList;
@@ -11,7 +13,10 @@ import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import ai.wit.eval.wit_eval.utils.GeoUtils;
 
 /**
  * Intent to query weather.
@@ -20,7 +25,7 @@ import java.util.Map;
  * outdoor weather.
  */
 public class WeatherIntent implements SupportedIntent {
-    /** Log */
+    /** Logging tag. */
     private static final String TAG = "WeatherIntent";
 
     private static final String NAME = "weather";
@@ -29,11 +34,11 @@ public class WeatherIntent implements SupportedIntent {
     // Supported entities
     private static final List<String> SUPPORTED_ENTITIES = ImmutableList.of(ENTITY_LOC);
 
-    private final Context cntxt;
+    private final Geocoder geocoder;
 
     /** constructor with Context. */
-    public WeatherIntent(Context cntxt) {
-        this.cntxt = cntxt;
+    public WeatherIntent(Context ctxt) {
+        this.geocoder = new Geocoder(ctxt, Locale.getDefault());
     }
 
     @Override
@@ -43,7 +48,7 @@ public class WeatherIntent implements SupportedIntent {
 
     /** @return weather with a given location, if no location is given, return current  */
     @Override
-    public String getResultString(HashMap<String, JsonElement> entities) {
+    public String getResultString(HashMap<String, JsonElement> entities, Location location) {
         Map<String, String> args = new HashMap<>();
         int cnt = 0;
         for (String entity : SUPPORTED_ENTITIES) {
@@ -52,7 +57,7 @@ public class WeatherIntent implements SupportedIntent {
                 Log.d(TAG, entities.get(entity).getAsString());
             }
         }
-        return getWeather(args);
+        return getWeather(args, location);
     }
 
     /** @return intent name, case-insensitive */
@@ -61,7 +66,8 @@ public class WeatherIntent implements SupportedIntent {
     }
 
     /** @param args are map of {@link #SUPPORTED_ENTITIES} to be added to weather query. */
-    private String getWeather(Map<String, String> args) {
+    private String getWeather(Map<String, String> args, Location location) {
+        String loc = args.containsKey(ENTITY_LOC) ? args.get(ENTITY_LOC) : GeoUtils.getZipCode(geocoder, location);
         return null;
     }
 
