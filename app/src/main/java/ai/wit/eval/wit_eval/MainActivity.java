@@ -1,5 +1,6 @@
 package ai.wit.eval.wit_eval;
 
+import android.location.Location;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -11,12 +12,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 import ai.wit.sdk.IWitListener;
@@ -24,13 +32,19 @@ import ai.wit.sdk.Wit;
 import ai.wit.sdk.model.WitOutcome;
 
 
-public class MainActivity extends ActionBarActivity implements IWitListener {
+public class MainActivity extends ActionBarActivity implements IWitListener,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     Wit _wit;
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
+    private Date mLastUpdateTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        buildGoogleApiClient();
+        startLocationUpdates();
         setContentView(R.layout.activity_main);
         String accessToken = "Access token";
         _wit = new Wit(accessToken, this);
@@ -109,6 +123,15 @@ public class MainActivity extends ActionBarActivity implements IWitListener {
         return null;
     }
 
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+    }
+
     private String dealWithIntent(WitOutcome witResult) {
         StringBuilder sb = new StringBuilder();
         String intent = witResult.get_intent();
@@ -119,6 +142,57 @@ public class MainActivity extends ActionBarActivity implements IWitListener {
         }
 
         return null;
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    protected LocationRequest createLocationRequest() {
+        return new LocationRequest().setPriority(LocationRequest.PRIORITY_NO_POWER);
+    }
+
+
+    protected void startLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient, createLocationRequest(), this);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+        mLastUpdateTime = new Date();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mGoogleApiClient.isConnected()) {
+            startLocationUpdates();
+        }
     }
 
     public static class PlaceholderFragment extends Fragment {
