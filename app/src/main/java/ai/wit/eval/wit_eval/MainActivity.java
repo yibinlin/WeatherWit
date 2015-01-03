@@ -22,11 +22,11 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+import ai.wit.eval.wit_eval.intents.SupportedIntent;
 import ai.wit.sdk.IWitListener;
 import ai.wit.sdk.Wit;
 import ai.wit.sdk.model.WitOutcome;
@@ -35,20 +35,35 @@ import ai.wit.sdk.model.WitOutcome;
 public class MainActivity extends ActionBarActivity implements IWitListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    Wit _wit;
+    private Wit wit;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private Date mLastUpdateTime;
+    private SupportedIntent.SupportedIntents supportedIntents;
 
+    /**
+     * Set up the following things:
+     *
+     * (1). Set up Google API client for location updates.
+     * (2). set up Wit.ai client.
+     * (3). Set up all {@link ai.wit.eval.wit_eval.intents.SupportedIntent}s.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Set up location updates.
         buildGoogleApiClient();
         startLocationUpdates();
+
         setContentView(R.layout.activity_main);
+
+        // Set up wit.ai
         String accessToken = "Access token";
-        _wit = new Wit(accessToken, this);
-        _wit.enableContextLocation(getApplicationContext());
+        wit = new Wit(accessToken, this);
+        wit.enableContextLocation(getApplicationContext());
+
+        // Set up supported intents.
+        supportedIntents = new SupportedIntent.SupportedIntents(getApplicationContext());
     }
 
 
@@ -73,7 +88,7 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
 
     public void toggle(View v) {
         try {
-            _wit.toggleListening();
+            wit.toggleListening();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -94,13 +109,14 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         // for now get the first intent.
         if (!witOutcomes.isEmpty()) {
             WitOutcome witResult = witOutcomes.iterator().next();
-
-
-
+            jsonView.setText(dealWithIntent(witResult));
+            ((TextView) findViewById(R.id.txtText)).setText("Done!");
         }
+        /**
         String jsonOutput = gson.toJson(witOutcomes);
         jsonView.setText(sb.toString() + "\n\n" + jsonOutput);
         ((TextView) findViewById(R.id.txtText)).setText("Done!");
+        */
     }
 
     @Override
@@ -136,12 +152,14 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         StringBuilder sb = new StringBuilder();
         String intent = witResult.get_intent();
 
-        if (intent.equalsIgnoreCase("weather")) {
-            HashMap<String, JsonElement> entities = witResult.get_entities();
-
+        for (SupportedIntent intentObj : supportedIntents.getSupportedIntents()) {
+            if (intent.equalsIgnoreCase(intentObj.getName())) {
+                HashMap<String, JsonElement> entities = witResult.get_entities();
+                return intentObj.getResultString(entities, mLastLocation);
+            }
         }
 
-        return null;
+        return "Unknown Intent";
     }
 
     @Override

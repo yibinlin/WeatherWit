@@ -12,7 +12,6 @@ import com.google.gson.JsonElement;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -74,7 +73,7 @@ public class WeatherIntent implements SupportedIntent {
         return getWeather(args, location);
     }
 
-    /** @return intent name, case-insensitive */
+    /** @return intent name, case-insensitive, should be the same as defined in wit.ai intent list. */
     @Override public String getName() {
         return NAME;
     }
