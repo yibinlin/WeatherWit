@@ -1,6 +1,6 @@
-Light weight voice-controlled weather app.
+Light weight experimental voice-controlled weather app.
 
-opyright 2014 Yibin Lin
+copyright 2014 Yibin Lin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
