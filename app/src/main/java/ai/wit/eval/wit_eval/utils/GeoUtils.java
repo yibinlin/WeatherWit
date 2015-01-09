@@ -19,6 +19,7 @@ public class GeoUtils {
 
     /** @return zip code of a {@link android.location.Location} */
     public static String getZipCode(Geocoder geocoder, Location location) {
+        Log.d(TAG, String.format("Geocoder object: %s, Location object: %s.", geocoder, location));
         List<Address> addresses = new ArrayList<>();
         try {
             addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);

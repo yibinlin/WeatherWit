@@ -62,12 +62,16 @@ public class WeatherIntent implements SupportedIntent {
     /** @return weather with a given location, if no location is given, return current  */
     @Override
     public String getResultString(HashMap<String, JsonElement> entities, Location location) {
+        Log.d(TAG, "Starting to query weather, resolving query entities.");
+        Log.d(TAG, String.format("Get entities: %s", entities));
         Map<String, String> args = new HashMap<>();
         int cnt = 0;
         for (String entity : SUPPORTED_ENTITIES) {
             if (entities.containsKey(entity)) {
-                args.put(entity, entities.get(entity).getAsString());
-                Log.d(TAG, entities.get(entity).getAsString());
+                JsonElement value = entities.get(entity);
+                if (value.isJsonPrimitive()) {
+                    args.put(entity, value.getAsJsonPrimitive().getAsString());
+                }
             }
         }
         return getWeather(args, location);

@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,6 +36,8 @@ import ai.wit.sdk.model.WitOutcome;
 public class MainActivity extends ActionBarActivity implements IWitListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
+    /** For debugging */
+    private static final String TAG = "MainActivity";
     private Wit wit;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
@@ -53,12 +56,12 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         super.onCreate(savedInstanceState);
         // Set up location updates.
         buildGoogleApiClient();
-        startLocationUpdates();
 
         setContentView(R.layout.activity_main);
 
         // Set up wit.ai
-        String accessToken = "Access token";
+        String accessToken = "37B6Q65ER534PMK5YE6KL2NP7FGXA4C5";
+        Log.i(TAG, "Wit Access token: " + accessToken);
         wit = new Wit(accessToken, this);
         wit.enableContextLocation(getApplicationContext());
 
@@ -96,6 +99,7 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
 
     @Override
     public void witDidGraspIntent(ArrayList<WitOutcome> witOutcomes, String messageId, Error error) {
+
         TextView jsonView = (TextView) findViewById(R.id.jsonView);
         jsonView.setMovementMethod(new ScrollingMovementMethod());
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -105,13 +109,13 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
             return ;
         }
 
-        StringBuilder sb = new StringBuilder();
         // for now get the first intent.
         if (!witOutcomes.isEmpty()) {
             WitOutcome witResult = witOutcomes.iterator().next();
             jsonView.setText(dealWithIntent(witResult));
             ((TextView) findViewById(R.id.txtText)).setText("Done!");
         }
+        // TODO remove this commented code.
         /**
         String jsonOutput = gson.toJson(witOutcomes);
         jsonView.setText(sb.toString() + "\n\n" + jsonOutput);
@@ -139,7 +143,6 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         return null;
     }
 
-
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -149,8 +152,8 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
     }
 
     private String dealWithIntent(WitOutcome witResult) {
-        StringBuilder sb = new StringBuilder();
         String intent = witResult.get_intent();
+        Log.d(TAG, String.format("Dealing with intent: %s.", intent));
 
         for (SupportedIntent intentObj : supportedIntents.getSupportedIntents()) {
             if (intent.equalsIgnoreCase(intentObj.getName())) {
@@ -164,18 +167,20 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
 
     @Override
     public void onConnected(Bundle bundle) {
+        Log.d(TAG, "Google Api Client connected.");
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient);
+        startLocationUpdates();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.d(TAG, "Google Api Client suspended.");
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-
+        Log.d(TAG, "Google Api Client failed.");
     }
 
     protected LocationRequest createLocationRequest() {
@@ -196,13 +201,16 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
 
     @Override
     protected void onPause() {
+        Log.d(TAG, "Application onPause() called.");
         super.onPause();
         stopLocationUpdates();
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(
-                mGoogleApiClient, this);
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(
+                    mGoogleApiClient, this);
+        }
     }
 
     @Override
