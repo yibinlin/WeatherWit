@@ -4,12 +4,11 @@ import android.content.Context;
 import android.location.Location;
 import android.support.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
 
 import ai.wit.eval.wit_eval.utils.IHasName;
 
@@ -21,7 +20,7 @@ public interface SupportedIntent extends IHasName {
     Collection<String> getSupportedEntityTypes();
 
     /** Get query/computation result as a String.  */
-    String getResultString(HashMap<String, JsonElement> entities, @Nullable Location location);
+    String getResultString(Map<String, JsonElement> entities, @Nullable Location location);
 
     /** Registering all finished {@link ai.wit.eval.wit_eval.intents.SupportedIntent}s. */
     public static class SupportedIntents {

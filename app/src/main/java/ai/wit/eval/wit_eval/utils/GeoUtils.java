@@ -20,6 +20,10 @@ public class GeoUtils {
     /** @return zip code of a {@link android.location.Location} */
     public static String getZipCode(Geocoder geocoder, Location location) {
         Log.d(TAG, String.format("Geocoder object: %s, Location object: %s.", geocoder, location));
+
+        Preconditions.checkArgument(location != null, "location object cannot be null, " +
+                "maybe Google client has not been connected yet?");
+
         List<Address> addresses = new ArrayList<>();
         try {
             addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);

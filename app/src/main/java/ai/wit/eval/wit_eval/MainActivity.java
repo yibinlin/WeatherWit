@@ -41,7 +41,6 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
     private Wit wit;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    private Date mLastUpdateTime;
     private SupportedIntent.SupportedIntents supportedIntents;
 
     /**
@@ -196,7 +195,6 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-        mLastUpdateTime = new Date();
     }
 
     @Override

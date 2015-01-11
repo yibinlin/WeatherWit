@@ -42,7 +42,7 @@ public class WeatherIntent implements SupportedIntent {
 
     private static final String NAME = "weather";
     private static final String QUERY_HEAD = "https://query.yahooapis.com/v1/public/yql?q=";
-    private static final MessageFormat QUERY_BODY_FORMAT = new MessageFormat("select * from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"{0}\")");
+    private static final String QUERY_BODY_FORMAT = "select * from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"{0}\")";
     private static final String QUERY_END = "&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
     private static final String ENTITY_LOC = "location";
     // Supported entities
@@ -61,19 +61,20 @@ public class WeatherIntent implements SupportedIntent {
 
     /** @return weather with a given location, if no location is given, return current  */
     @Override
-    public String getResultString(HashMap<String, JsonElement> entities, Location location) {
+    public String getResultString(Map<String, JsonElement> entities, Location location) {
         Log.d(TAG, "Starting to query weather, resolving query entities.");
         Log.d(TAG, String.format("Get entities: %s", entities));
         Map<String, String> args = new HashMap<>();
-        int cnt = 0;
         for (String entity : SUPPORTED_ENTITIES) {
             if (entities.containsKey(entity)) {
-                JsonElement value = entities.get(entity);
-                if (value.isJsonPrimitive()) {
-                    args.put(entity, value.getAsJsonPrimitive().getAsString());
+                JsonElement jsonValue = entities.get(entity);
+                if (jsonValue.isJsonArray()) {
+                    String stringValue = jsonValue.getAsJsonArray().get(0).getAsJsonObject().get("value").getAsJsonPrimitive().getAsString();
+                    args.put(entity, stringValue);
                 }
             }
         }
+
         return getWeather(args, location);
     }
 
@@ -84,9 +85,13 @@ public class WeatherIntent implements SupportedIntent {
 
     /** @param args are map of {@link #SUPPORTED_ENTITIES} to be added to weather query. */
     private String getWeather(Map<String, String> args, Location location) {
-        String loc = args.containsKey(ENTITY_LOC) ? args.get(ENTITY_LOC) : GeoUtils.getZipCode(geocoder, location);
+        Log.d(TAG, String.format("Entities: %s", args));
 
-        String query = QUERY_HEAD + Uri.encode(QUERY_BODY_FORMAT.format(loc)) + QUERY_END;
+        String locationString = args.containsKey(ENTITY_LOC)
+                ? args.get(ENTITY_LOC)
+                : GeoUtils.getZipCode(geocoder, location);
+
+        String query = QUERY_HEAD + Uri.encode(String.format(QUERY_BODY_FORMAT, locationString)) + QUERY_END;
         Log.d(TAG, "Yahoo weather query String: " + query);
         try {
             HttpResponse response = HTTP_CLIENT.execute(new HttpGet(query));
