@@ -46,7 +46,8 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
     /**
      * Set up the following things:
      *
-     * (1). Set up Google API client for location updates.
+     * (1). Set up Google API client for location updates, tries to connect to Google API service
+     * immediately.
      * (2). set up Wit.ai client.
      * (3). Set up all {@link ai.wit.eval.wit_eval.intents.SupportedIntent}s.
      */
@@ -55,6 +56,8 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         super.onCreate(savedInstanceState);
         // Set up location updates.
         buildGoogleApiClient();
+        // Try to force connection.
+        mGoogleApiClient.connect();
 
         setContentView(R.layout.activity_main);
 
