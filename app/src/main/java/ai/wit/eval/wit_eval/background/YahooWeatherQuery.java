@@ -14,6 +14,8 @@ import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,8 +37,11 @@ public class YahooWeatherQuery implements Callable<String> {
     private static final HttpClient HTTP_CLIENT = new DefaultHttpClient();
 
     private static final String QUERY_HEAD = "https://query.yahooapis.com/v1/public/yql?q=";
-    private static final String QUERY_BODY_FORMAT = "select * from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"{0}\")";
+    private static final String QUERY_BODY_FORMAT = "select item.condition from weather.forecast where woeid in (select woeid from geo.places(1) where text=\"%s\") and u='c'";
     private static final String QUERY_END = "&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys";
+
+    /** Indentation for pretty String printing of Yahoo weather query results. */
+    private static final int PRETTY_JSON_INDENT = 2;
 
     private final Map<String, String> arguments;
     private final Location location;
@@ -56,6 +61,9 @@ public class YahooWeatherQuery implements Callable<String> {
                 ? arguments.get(WeatherIntent.ENTITY_LOC)
                 : GeoUtils.getZipCode(geocoder, location);
 
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Showing current condition for %s: \n", locationString));
+
         String query = QUERY_HEAD + Uri.encode(String.format(QUERY_BODY_FORMAT, locationString)) + QUERY_END;
         Log.d(TAG, "Yahoo weather query String: " + query);
         try {
@@ -65,14 +73,23 @@ public class YahooWeatherQuery implements Callable<String> {
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 response.getEntity().writeTo(out);
                 out.close();
-                return out.toString();
+
+                JSONObject jsonObject = new JSONObject(out.toString());
+                return sb.append(getDisplayText(jsonObject)).toString();
             } else {
                 response.getEntity().getContent().close();
                 Log.e(TAG, statusLine.getReasonPhrase());
             }
         } catch (IOException e) {
             Log.e(TAG, "IO Exception happened when http query", e);
+        } catch (JSONException e) {
+            Log.e(TAG, "Json object creation error for Yahoo API response.", e);
         }
-        return "No weather data available";
+        return sb.append("No weather data available").toString();
+    }
+
+    /** @return display text from a {@link org.json.JSONObject}. */
+    private String getDisplayText(JSONObject jsonObject) throws JSONException {
+        return jsonObject.toString(PRETTY_JSON_INDENT);
     }
 }
