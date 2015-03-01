@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.Callables;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -75,7 +74,7 @@ public class YahooWeatherQuery implements Callable<String> {
                 out.close();
 
                 JSONObject jsonObject = new JSONObject(out.toString());
-                return sb.append(getDisplayText(jsonObject)).toString();
+                return sb.append(extractInfo(jsonObject)).toString();
             } else {
                 response.getEntity().getContent().close();
                 Log.e(TAG, statusLine.getReasonPhrase());
@@ -88,8 +87,23 @@ public class YahooWeatherQuery implements Callable<String> {
         return sb.append("No weather data available").toString();
     }
 
-    /** @return display text from a {@link org.json.JSONObject}. */
-    private String getDisplayText(JSONObject jsonObject) throws JSONException {
-        return jsonObject.toString(PRETTY_JSON_INDENT);
+    /**
+     * Now it only supports "condition" query.
+     *
+     * @return extracted information to display from a responded Yahoo weather query, in the
+     * form of {@link org.json.JSONObject}.
+     */
+    private String extractInfo(JSONObject jsonObject) throws JSONException {
+        JSONObject condition = jsonObject
+                .getJSONObject("query")
+                .getJSONObject("results")
+                .getJSONObject("channel")
+                .getJSONObject("item")
+                .getJSONObject("condition");
+
+        String temp = condition.getString("temp");
+        String text = condition.getString("text");
+
+        return String.format("Condition: %s, Temperature: %s°C", text, temp);
     }
 }

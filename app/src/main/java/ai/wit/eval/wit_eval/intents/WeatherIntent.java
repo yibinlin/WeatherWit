@@ -59,7 +59,10 @@ public class WeatherIntent implements SupportedIntent {
             if (entities.containsKey(entity)) {
                 JsonElement jsonValue = entities.get(entity);
                 if (jsonValue.isJsonArray()) {
-                    String stringValue = jsonValue.getAsJsonArray().get(0).getAsJsonObject().get("value").getAsJsonPrimitive().getAsString();
+                    String stringValue = jsonValue.getAsJsonArray()
+                            .get(0).getAsJsonObject()
+                            .get("value").getAsJsonPrimitive()
+                            .getAsString();
                     queryArgs.put(entity, stringValue);
                 }
             }

@@ -104,7 +104,6 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
 
         TextView jsonView = (TextView) findViewById(R.id.jsonView);
         jsonView.setMovementMethod(new ScrollingMovementMethod());
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         if (error != null) {
             jsonView.setText(error.getLocalizedMessage());
@@ -115,14 +114,8 @@ public class MainActivity extends ActionBarActivity implements IWitListener,
         if (!witOutcomes.isEmpty()) {
             WitOutcome witResult = witOutcomes.iterator().next();
             jsonView.setText(dealWithIntent(witResult));
-            ((TextView) findViewById(R.id.txtText)).setText("Done!");
+            ((TextView) findViewById(R.id.txtText)).setText("Done! \n Text: " + witResult.get_text());
         }
-        // TODO remove this commented code.
-        /**
-        String jsonOutput = gson.toJson(witOutcomes);
-        jsonView.setText(sb.toString() + "\n\n" + jsonOutput);
-        ((TextView) findViewById(R.id.txtText)).setText("Done!");
-        */
     }
 
     @Override
